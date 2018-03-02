@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.18;
 contract RockPaperScissors {
 
     enum RPS {
@@ -51,6 +51,10 @@ contract RockPaperScissors {
             player2 = msg.sender;
             globalState = State.Playing;
         }
+    }
+
+    function getPlayer1Address() public view returns (address) {
+        return player1;
     }
 
     function play(RPS choice) public statePlaying() {
