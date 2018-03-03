@@ -11,7 +11,11 @@ contract RockPaperScissors {
     enum State {
         Registering,
         Playing,
-        Evaluating
+        Revealing,
+        Evaluating,
+        Draw,
+        Player1Win,
+        Player2Win
     }
 
     address player1;
@@ -19,6 +23,9 @@ contract RockPaperScissors {
 
     RPS player1choice;
     RPS player2choice;
+
+    bytes32 player1ChoiceHash;
+    bytes32 player2ChoiceHash;
 
     State globalState;
 
@@ -54,15 +61,28 @@ contract RockPaperScissors {
 
         if (player1 == 0) {
             player1 = newPlayer;
-        } else if (player2 == 0) {
+        } else if (player2 == 0 && newPlayer != player1) {
             player2 = newPlayer;
         }
     }
 
-    function play(RPS choice) public statePlaying() {
+    function play(RPS choice, string secret) public statePlaying() {
         if (msg.sender == player1) {
-            player1choice = choice;
+            player1ChoiceHash = keccak256(keccak256(choice) ^ keccak256(secret));
         } else if (msg.sender == player2) {
+            player2ChoiceHash = keccak256(keccak256(choice) ^ keccak256(secret));
+        }
+
+        if (player1ChoiceHash != 0 && player2ChoiceHash != 0) {
+            globalState = State.Revealing;
+        }
+    }
+
+    function reveal(RPS choice, string secret) public stateRevealing() {
+
+        if (msg.sender == player1 && keccak256(keccak256(choice) ^ keccak256(secret)) == player1ChoiceHash) {
+            player1choice = choice;
+        } else if (msg.sender == player2 && keccak256(keccak256(choice) ^ keccak256(secret)) == player2ChoiceHash) {
             player2choice = choice;
         }
 
@@ -70,17 +90,22 @@ contract RockPaperScissors {
             globalState = State.Evaluating;
             evaluate();
         }
+
+
     }
 
     function evaluate() private stateEvaluating() {
         uint result = outcomes[uint(player1choice)][uint(player2choice)];
 
         if (result == 0) {
+            globalState = State.Draw;
             player1.transfer(this.balance/2);
             player2.transfer(this.balance);
         } else if (result == 1) {
+            globalState = State.Player1Win;
             player1.transfer(this.balance);
         } else if (result == 2) {
+            globalState = State.Player2Win;
             player2.transfer(this.balance);
         }
     }
@@ -95,6 +120,14 @@ contract RockPaperScissors {
 
     modifier statePlaying() {
         if (getState() != State.Playing) {
+            revert();
+        } else {
+            _;
+        }
+    }
+
+    modifier stateRevealing() {
+        if (getState() != State.Revealing) {
             revert();
         } else {
             _;

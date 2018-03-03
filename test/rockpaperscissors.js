@@ -40,18 +40,44 @@ contract('RockPaperScissors', function(accounts) {
     });
   });
 
-  it("...should allow players to chose an RPS option, and change the state to evaluating.", function() {
+  it("...should allow players to chose an RPS option and secret, and change the state to revealing.", function() {
     return RockPaperScissors.deployed().then(function(instance) {
       rockPaperScissorsInstance = instance;
 
-      return rockPaperScissorsInstance.play(1, {from: accounts[0]});
+      return rockPaperScissorsInstance.play(1, "secret", {from: accounts[0]});
     }).then(function() {
-      return rockPaperScissorsInstance.play(2, {from: accounts[1]});
+      return rockPaperScissorsInstance.play(2, "terces", {from: accounts[1]});
     }).then(function() {
       return rockPaperScissorsInstance.getState.call();
     }).then(function(state) {
-      var evaluatingState = 2;
-      assert.equal(state, evaluatingState, "The contact was not in evaluating state after two players played.");
+      var revealingState = 2;
+      assert.equal(state, revealingState, "The contact was not in revealing state after two players played.");
+    });
+  });
+
+  it("...should allow a player to reveal but remain in revealing to wait for the next player", function() {
+    return RockPaperScissors.deployed().then(function(instance) {
+      rockPaperScissorsInstance = instance;
+    }).then(function() {
+      return rockPaperScissorsInstance.reveal(1, "secret", {from: accounts[0]});
+    }).then(function() {
+      return rockPaperScissorsInstance.getState.call();
+    }).then(function(state) {
+      var revealingState = 2;
+      assert.equal(state, revealingState, "The contact was not in revealing state after one player revealed.");
+    });
+  });
+
+  it("...should change state to Player2Win after the second player has revealed", function() {
+    return RockPaperScissors.deployed().then(function(instance) {
+      rockPaperScissorsInstance = instance;
+    }).then(function() {
+      return rockPaperScissorsInstance.reveal(2, "terces", {from: accounts[1]});
+    }).then(function() {
+      return rockPaperScissorsInstance.getState.call();
+    }).then(function(state) {
+      var player2WinState = 6;
+      assert.equal(state, player2WinState, "The contact was not in evaluating state after both players revealed.");
     });
   });
 
