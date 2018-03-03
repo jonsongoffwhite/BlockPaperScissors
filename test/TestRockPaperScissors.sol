@@ -6,7 +6,7 @@ import "../contracts/RockPaperScissors.sol";
 
 contract TestRockPaperScissors {
 
-  function testItStoresARegisterer() public {
+  /* function testItStoresARegisterer() public {
     RockPaperScissors rockPaperScissors = RockPaperScissors(DeployedAddresses.RockPaperScissors());
 
     rockPaperScissors.register();
@@ -14,6 +14,6 @@ contract TestRockPaperScissors {
     address expected = this;
 
     Assert.equal(rockPaperScissors.getPlayer1Address(), expected, "It should store the address of this contract.");
-  }
+  } */
 
 }

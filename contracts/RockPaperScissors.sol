@@ -43,18 +43,20 @@ contract RockPaperScissors {
         player2choice = RPS.Unchosen;
     }
 
-    function register() public payable stateRegistering() {
-
-        if (player1 == 0) {
-            player1 = msg.sender;
-        } else if (player2 == 0) {
-            player2 = msg.sender;
-            globalState = State.Playing;
-        }
+    function register() public payable {
+      registerPlayer(msg.sender);
+      if (player1 != 0 && player2 != 0) {
+        globalState = State.Playing;
+      }
     }
 
-    function getPlayer1Address() public view returns (address) {
-        return player1;
+    function registerPlayer(address newPlayer) private stateRegistering() {
+
+        if (player1 == 0) {
+            player1 = newPlayer;
+        } else if (player2 == 0) {
+            player2 = newPlayer;
+        }
     }
 
     function play(RPS choice) public statePlaying() {
@@ -66,9 +68,8 @@ contract RockPaperScissors {
 
         if (player1choice != RPS.Unchosen && player2choice != RPS.Unchosen) {
             globalState = State.Evaluating;
+            evaluate();
         }
-
-        evaluate();
     }
 
     function evaluate() private stateEvaluating() {
@@ -85,7 +86,7 @@ contract RockPaperScissors {
     }
 
     modifier stateRegistering() {
-        if (globalState != State.Registering) {
+        if (getState() != State.Registering) {
             revert();
         } else {
             _;
@@ -93,7 +94,7 @@ contract RockPaperScissors {
     }
 
     modifier statePlaying() {
-        if (globalState != State.Playing) {
+        if (getState() != State.Playing) {
             revert();
         } else {
             _;
@@ -101,11 +102,15 @@ contract RockPaperScissors {
     }
 
     modifier stateEvaluating() {
-        if (globalState != State.Evaluating) {
+        if (getState() != State.Evaluating) {
             revert();
         } else {
             _;
         }
+    }
+
+    function getState() public view returns(State) {
+        return globalState;
     }
 
 }

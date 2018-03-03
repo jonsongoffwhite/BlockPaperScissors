@@ -8,6 +8,16 @@ import './css/open-sans.css'
 import './css/pure-min.css'
 import './App.css'
 
+class Button extends Component {
+  render() {
+    return (
+      <button className="button">
+        "Button"
+      </button>
+    )
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props)
@@ -16,6 +26,10 @@ class App extends Component {
       storageValue: 5,
       web3: null
     }
+  }
+
+  renderButton() {
+    return <Button />;
   }
 
   componentWillMount() {
@@ -45,32 +59,22 @@ class App extends Component {
      */
 
     const contract = require('truffle-contract')
-    //const simpleStorage = contract(SimpleStorageContract)
     const rockPaperScissors = contract(RockPaperScissorsContract);
-    //simpleStorage.setProvider(this.state.web3.currentProvider)
     rockPaperScissors.setProvider(this.state.web3.currentProvider);
 
     // Declaring this for later so we can chain functions on SimpleStorage.
-    //var simpleStorageInstance;
     var rockPaperScissorsInstance;
 
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
-      //simpleStorage.deployed().then((instance) => {
       rockPaperScissors.deployed().then((instance) => {
-        //simpleStorageInstance = instance;
         rockPaperScissorsInstance = instance;
+        this.setState({instance: instance});
 
-        // Stores a given value, 5 by default.
-        //return simpleStorageInstance.set(5, {from: accounts[0]})
         return rockPaperScissorsInstance.register({from: accounts[0]});
       }).then((result) => {
-        // Get the value from the contract to prove it worked.
         return rockPaperScissorsInstance.getPlayer1Address.call(accounts[0]);
-        //return simpleStorageInstance.get.call(accounts[0]);
       }).then((result) => {
-        // Update state with the result.
-        console.log(accounts[0]);
         return this.setState({ number: result })
       })
     })
@@ -95,6 +99,9 @@ class App extends Component {
             </div>
           </div>
         </main>
+        <div className="GameControls">
+          {this.renderButton()}
+        </div>
       </div>
     );
   }
