@@ -31,8 +31,6 @@ contract RockPaperScissors {
 
     mapping(uint => mapping(uint => uint)) outcomes;
 
-    mapping(address => RPS) choices;
-
     function RockPaperScissors() public {
         outcomes[0][0] = 0;
         outcomes[1][1] = 0;
@@ -67,9 +65,9 @@ contract RockPaperScissors {
     }
 
     function play(RPS choice, string secret) public statePlaying() {
-        if (msg.sender == player1) {
+        if (msg.sender == player1 && player1ChoiceHash == 0) {
             player1ChoiceHash = keccak256(keccak256(choice) ^ keccak256(secret));
-        } else if (msg.sender == player2) {
+        } else if (msg.sender == player2 && player2ChoiceHash == 0) {
             player2ChoiceHash = keccak256(keccak256(choice) ^ keccak256(secret));
         }
 
@@ -88,13 +86,12 @@ contract RockPaperScissors {
 
         if (player1choice != RPS.Unchosen && player2choice != RPS.Unchosen) {
             globalState = State.Evaluating;
-            evaluate();
         }
 
 
     }
 
-    function evaluate() private stateEvaluating() {
+    function evaluate() public stateEvaluating() {
         uint result = outcomes[uint(player1choice)][uint(player2choice)];
 
         if (result == 0) {
@@ -108,6 +105,10 @@ contract RockPaperScissors {
             globalState = State.Player2Win;
             player2.transfer(this.balance);
         }
+    }
+
+    function getBalance() public view returns(uint) {
+        return this.balance;
     }
 
     modifier stateRegistering() {
