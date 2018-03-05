@@ -86,12 +86,13 @@ contract RockPaperScissors {
 
         if (player1choice != RPS.Unchosen && player2choice != RPS.Unchosen) {
             globalState = State.Evaluating;
+            evaluate();
         }
 
 
     }
 
-    function evaluate() public stateEvaluating() {
+    function evaluate() private stateEvaluating() {
         uint result = outcomes[uint(player1choice)][uint(player2choice)];
 
         if (result == 0) {
