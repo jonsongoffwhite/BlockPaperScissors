@@ -24,10 +24,15 @@ contract RockPaperScissors {
     RPS player1choice;
     RPS player2choice;
 
+    uint256 player1bet;
+    uint256 player2bet;
+
     bytes32 player1ChoiceHash;
     bytes32 player2ChoiceHash;
 
     State globalState;
+
+    uint256 MINIMUM_BET = 5;
 
     mapping(uint => mapping(uint => uint)) outcomes;
 
@@ -64,11 +69,17 @@ contract RockPaperScissors {
         }
     }
 
-    function play(RPS choice, string secret) public statePlaying() {
+    function play(RPS choice, string secret) public
+      payable
+      isValidPlayer()
+      statePlaying()
+      largeEnoughBet(MINIMUM_BET) {
         if (msg.sender == player1 && player1ChoiceHash == 0) {
             player1ChoiceHash = keccak256(keccak256(choice) ^ keccak256(secret));
+            player1bet = msg.value;
         } else if (msg.sender == player2 && player2ChoiceHash == 0) {
             player2ChoiceHash = keccak256(keccak256(choice) ^ keccak256(secret));
+            player2bet = msg.value;
         }
 
         if (player1ChoiceHash != 0 && player2ChoiceHash != 0) {
@@ -76,7 +87,9 @@ contract RockPaperScissors {
         }
     }
 
-    function reveal(RPS choice, string secret) public stateRevealing() {
+    function reveal(RPS choice, string secret) public
+      isValidPlayer()
+      stateRevealing() {
 
         if (msg.sender == player1 && keccak256(keccak256(choice) ^ keccak256(secret)) == player1ChoiceHash) {
             player1choice = choice;
@@ -87,6 +100,7 @@ contract RockPaperScissors {
         if (player1choice != RPS.Unchosen && player2choice != RPS.Unchosen) {
             globalState = State.Evaluating;
             evaluate();
+            globalState = getState();
         }
 
 
@@ -97,8 +111,8 @@ contract RockPaperScissors {
 
         if (result == 0) {
             globalState = State.Draw;
-            player1.transfer(this.balance/2);
-            player2.transfer(this.balance);
+            player1.transfer(player1bet);
+            player2.transfer(player2bet);
         } else if (result == 1) {
             globalState = State.Player1Win;
             player1.transfer(this.balance);
@@ -110,6 +124,14 @@ contract RockPaperScissors {
 
     function getBalance() public view returns(uint) {
         return this.balance;
+    }
+
+    modifier isValidPlayer() {
+        if (msg.sender != player1 && msg.sender != player2) {
+            revert();
+        } else {
+            _;
+        }
     }
 
     modifier stateRegistering() {
@@ -138,6 +160,14 @@ contract RockPaperScissors {
 
     modifier stateEvaluating() {
         if (getState() != State.Evaluating) {
+            revert();
+        } else {
+            _;
+        }
+    }
+
+    modifier largeEnoughBet(uint256 amount) {
+        if (msg.value < amount) {
             revert();
         } else {
             _;

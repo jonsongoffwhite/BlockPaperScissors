@@ -44,9 +44,9 @@ contract('RockPaperScissors', function(accounts) {
     return RockPaperScissors.deployed().then(function(instance) {
       rockPaperScissorsInstance = instance;
 
-      return rockPaperScissorsInstance.play(1, "secret", {from: accounts[0]});
+      return rockPaperScissorsInstance.play(1, "secret", {from: accounts[0], value: 10});
     }).then(function() {
-      return rockPaperScissorsInstance.play(2, "terces", {from: accounts[1]});
+      return rockPaperScissorsInstance.play(2, "terces", {from: accounts[1], value: 10});
     }).then(function() {
       return rockPaperScissorsInstance.getState.call();
     }).then(function(state) {
